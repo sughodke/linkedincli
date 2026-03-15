@@ -1,13 +1,16 @@
 {
-  "name": "linkedin-cli",
+  "name": "linkedincli",
   "version": "0.1.0",
-  "description": "CLI and MCP server for LinkedIn — full platform management via cookie session auth",
+  "description": "CLI and MCP server for LinkedIn — 43 commands for profiles, posts, messaging, connections, search, feed, and more. Cookie session auth, AI agent native.",
   "type": "module",
   "bin": {
     "linkedin": "./dist/index.js"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE"
   ],
   "scripts": {
     "dev": "tsx src/index.ts",
@@ -20,6 +23,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcharleson/linkedincli.git"
+  },
+  "homepage": "https://github.com/bcharleson/linkedincli#readme",
+  "bugs": {
+    "url": "https://github.com/bcharleson/linkedincli/issues"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
@@ -38,10 +49,19 @@
     "linkedin",
     "cli",
     "mcp",
+    "mcp-server",
     "automation",
     "voyager-api",
     "agent",
-    "ai"
+    "ai",
+    "linkedin-api",
+    "linkedin-automation",
+    "cookie-auth",
+    "social-media",
+    "messaging",
+    "connections",
+    "posts",
+    "feed"
   ],
   "author": "Brandon Charleson",
   "license": "MIT"
