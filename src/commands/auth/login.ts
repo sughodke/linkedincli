@@ -10,12 +10,14 @@ export function registerLoginCommand(program: Command): void {
     .description('Store your LinkedIn session cookies (li_at + JSESSIONID) for CLI use')
     .option('--li-at <cookie>', 'li_at cookie value (from browser DevTools)')
     .option('--jsessionid <cookie>', 'JSESSIONID cookie value (from browser DevTools)')
-    .action(async (opts: { liAt?: string; jsessionid?: string }) => {
-      const globalOpts = program.optsWithGlobals() as GlobalOptions;
+    .action(async function (this: Command) {
+      // Commander puts --li-at on the subcommand opts (not global), read from both
+      const localOpts = this.opts() as Record<string, string | undefined>;
+      const globalOpts = this.optsWithGlobals() as GlobalOptions & Record<string, string | undefined>;
 
       try {
-        let liAt = opts.liAt;
-        let jsessionid = opts.jsessionid;
+        let liAt = localOpts.liAt ?? globalOpts.liAt;
+        let jsessionid = localOpts.jsessionid ?? globalOpts.jsessionid;
 
         // Interactive mode if cookies not provided as flags
         if (!liAt || !jsessionid) {

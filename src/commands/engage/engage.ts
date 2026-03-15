@@ -43,21 +43,21 @@ export const engageReactionsCommand: CommandDefinition = {
 
   inputSchema: z.object({
     post_urn: z.string().describe('Post activity URN ID (numeric part)'),
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of reactions'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of reactions'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     args: [{ field: 'post_urn', name: 'post-urn', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of reactions' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of reactions' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
 
   handler: async (input, client) => {
     return client.get('/feed/reactions', {
-      count: input.count,
+      count: input.limit,
       q: 'reactionType',
       sortOrder: 'REV_CHRON',
       start: input.start,
@@ -107,7 +107,7 @@ export const engageCommentsListCommand: CommandDefinition = {
 
   inputSchema: z.object({
     post_urn: z.string().describe('Post activity URN ID (numeric part)'),
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of comments'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of comments'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
     sort: z.enum(['RELEVANCE', 'REVERSE_CHRONOLOGICAL']).default('RELEVANCE').describe('Sort order'),
   }),
@@ -115,7 +115,7 @@ export const engageCommentsListCommand: CommandDefinition = {
   cliMappings: {
     args: [{ field: 'post_urn', name: 'post-urn', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of comments' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of comments' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
       { field: 'sort', flags: '-s, --sort <order>', description: 'Sort: RELEVANCE or REVERSE_CHRONOLOGICAL' },
     ],
@@ -123,7 +123,7 @@ export const engageCommentsListCommand: CommandDefinition = {
 
   handler: async (input, client) => {
     return client.get('/feed/comments', {
-      count: input.count,
+      count: input.limit,
       start: input.start,
       q: 'comments',
       sortOrder: input.sort,

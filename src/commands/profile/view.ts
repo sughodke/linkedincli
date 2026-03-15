@@ -71,19 +71,19 @@ export const profileSkillsCommand: CommandDefinition = {
 
   inputSchema: z.object({
     public_id: z.string().describe('Public profile identifier'),
-    count: z.coerce.number().min(1).max(100).default(100).describe('Number of skills'),
+    limit: z.coerce.number().min(1).max(100).default(100).describe('Number of skills'),
   }),
 
   cliMappings: {
     args: [{ field: 'public_id', name: 'public-id', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of skills to return' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of skills to return' },
     ],
   },
 
   handler: async (input, client) => {
     return client.get(`/identity/profiles/${encodeURIComponent(input.public_id)}/skills`, {
-      count: input.count,
+      count: input.limit,
       start: 0,
     });
   },
@@ -156,26 +156,26 @@ export const profilePostsCommand: CommandDefinition = {
   description: 'List recent posts from a profile',
   examples: [
     'linkedin profile posts johndoe',
-    'linkedin profile posts johndoe --count 50',
+    'linkedin profile posts johndoe --limit 50',
   ],
 
   inputSchema: z.object({
     urn_id: z.string().describe('Profile URN ID (numeric)'),
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of posts'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of posts'),
     start: z.coerce.number().default(0).describe('Offset for pagination'),
   }),
 
   cliMappings: {
     args: [{ field: 'urn_id', name: 'urn-id', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of posts' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of posts' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
 
   handler: async (input, client) => {
     return client.get('/identity/profileUpdatesV2', {
-      count: input.count,
+      count: input.limit,
       start: input.start,
       q: 'memberShareFeed',
       moduleKey: 'member-shares:phone',

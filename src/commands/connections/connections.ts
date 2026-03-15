@@ -51,13 +51,13 @@ export const connectionsReceivedCommand: CommandDefinition = {
   examples: ['linkedin connections received'],
 
   inputSchema: z.object({
-    count: z.coerce.number().min(1).max(100).default(100).describe('Number of invitations'),
+    limit: z.coerce.number().min(1).max(100).default(100).describe('Number of invitations'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of invitations' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of invitations' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
@@ -65,7 +65,7 @@ export const connectionsReceivedCommand: CommandDefinition = {
   handler: async (input, client) => {
     return client.get('/relationships/invitationViews', {
       start: input.start,
-      count: input.count,
+      count: input.limit,
       includeInsights: true,
       q: 'receivedInvitation',
     });
@@ -80,13 +80,13 @@ export const connectionsSentCommand: CommandDefinition = {
   examples: ['linkedin connections sent'],
 
   inputSchema: z.object({
-    count: z.coerce.number().min(1).max(100).default(100).describe('Number of invitations'),
+    limit: z.coerce.number().min(1).max(100).default(100).describe('Number of invitations'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of invitations' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of invitations' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
@@ -94,7 +94,7 @@ export const connectionsSentCommand: CommandDefinition = {
   handler: async (input, client) => {
     return client.get('/relationships/sentInvitationViewsV2', {
       start: input.start,
-      count: input.count,
+      count: input.limit,
       invitationType: 'CONNECTION',
       q: 'invitationType',
     });

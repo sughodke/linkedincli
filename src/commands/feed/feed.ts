@@ -8,24 +8,24 @@ export const feedViewCommand: CommandDefinition = {
   description: 'View your LinkedIn feed (chronological)',
   examples: [
     'linkedin feed view',
-    'linkedin feed view --count 20',
+    'linkedin feed view --limit 20',
   ],
 
   inputSchema: z.object({
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of feed items'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of feed items'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of feed items' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of feed items' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
 
   handler: async (input, client) => {
     return client.get('/feed/updatesV2', {
-      count: input.count,
+      count: input.limit,
       start: input.start,
       q: 'chronFeed',
     });
@@ -37,18 +37,18 @@ export const feedUserCommand: CommandDefinition = {
   group: 'feed',
   subcommand: 'user',
   description: 'View feed/activity for a specific user',
-  examples: ['linkedin feed user johndoe --count 20'],
+  examples: ['linkedin feed user johndoe --limit 20'],
 
   inputSchema: z.object({
     profile_id: z.string().describe('Public profile ID or URN ID'),
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of items'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of items'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     args: [{ field: 'profile_id', name: 'profile-id', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of items' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of items' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
@@ -58,7 +58,7 @@ export const feedUserCommand: CommandDefinition = {
       profileId: input.profile_id,
       q: 'memberShareFeed',
       moduleKey: 'member-share',
-      count: input.count,
+      count: input.limit,
       start: input.start,
     });
   },
@@ -69,18 +69,18 @@ export const feedCompanyCommand: CommandDefinition = {
   group: 'feed',
   subcommand: 'company',
   description: 'View feed/updates for a company page',
-  examples: ['linkedin feed company google --count 20'],
+  examples: ['linkedin feed company google --limit 20'],
 
   inputSchema: z.object({
     company_name: z.string().describe('Company universal name (URL slug)'),
-    count: z.coerce.number().min(1).max(100).default(10).describe('Number of items'),
+    limit: z.coerce.number().min(1).max(100).default(10).describe('Number of items'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
   cliMappings: {
     args: [{ field: 'company_name', name: 'company-name', required: true }],
     options: [
-      { field: 'count', flags: '-c, --count <number>', description: 'Number of items' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Number of items' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
@@ -90,7 +90,7 @@ export const feedCompanyCommand: CommandDefinition = {
       companyUniversalName: input.company_name,
       q: 'companyFeedByUniversalName',
       moduleKey: 'member-share',
-      count: input.count,
+      count: input.limit,
       start: input.start,
     });
   },

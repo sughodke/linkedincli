@@ -116,7 +116,7 @@ export const searchJobsCommand: CommandDefinition = {
     job_type: z.string().optional().describe('Job type: F=Full, C=Contract, P=Part, T=Temp, I=Intern'),
     remote: z.boolean().optional().describe('Filter for remote jobs'),
     posted_within: z.string().optional().describe('Time range: r86400=24h, r604800=week, r2592000=month'),
-    count: z.coerce.number().min(1).max(49).default(25).describe('Results per page'),
+    limit: z.coerce.number().min(1).max(49).default(25).describe('Results per page'),
     start: z.coerce.number().default(0).describe('Pagination offset'),
   }),
 
@@ -128,7 +128,7 @@ export const searchJobsCommand: CommandDefinition = {
       { field: 'job_type', flags: '--job-type <type>', description: 'Job type: F, C, P, T, I' },
       { field: 'remote', flags: '--remote', description: 'Remote jobs only' },
       { field: 'posted_within', flags: '--posted-within <range>', description: 'Time range: r86400, r604800, r2592000' },
-      { field: 'count', flags: '-c, --count <number>', description: 'Results per page' },
+      { field: 'limit', flags: '-l, --limit <number>', description: 'Results per page' },
       { field: 'start', flags: '--start <number>', description: 'Pagination offset' },
     ],
   },
@@ -146,7 +146,7 @@ export const searchJobsCommand: CommandDefinition = {
 
     return client.get('/voyagerJobsDashJobCards', {
       decorationId: 'com.linkedin.voyager.dash.deco.jobs.search.JobSearchCardsCollection-174',
-      count: input.count,
+      count: input.limit,
       q: 'jobSearch',
       query: `(origin:JOB_SEARCH_PAGE_QUERY_EXPANSION,keywords:${encodeURIComponent(input.keywords)}${locationStr}${filtersStr},spellCorrectionEnabled:true)`,
       start: input.start,
