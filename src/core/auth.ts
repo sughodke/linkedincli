@@ -4,16 +4,17 @@ import type { LinkedInAuth } from './types.js';
 
 export async function resolveAuth(flags?: { liAt?: string; jsessionid?: string }): Promise<LinkedInAuth> {
   // Priority: CLI flags > env vars > config file
+  const config = await loadConfig();
 
   const liAt =
     flags?.liAt ??
     process.env.LINKEDIN_LI_AT ??
-    (await loadConfig())?.li_at;
+    config?.li_at;
 
   const jsessionid =
     flags?.jsessionid ??
     process.env.LINKEDIN_JSESSIONID ??
-    (await loadConfig())?.jsessionid;
+    config?.jsessionid;
 
   if (!liAt) {
     throw new AuthError(

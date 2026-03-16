@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { readFile } from 'node:fs/promises';
+import { readFile, access } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import type { CommandDefinition, LinkedInClient } from '../../core/types.js';
 import { generateTrackingId } from '../../core/client.js';
 
@@ -124,6 +125,13 @@ export const postsDeleteCommand: CommandDefinition = {
 };
 
 async function uploadImage(client: LinkedInClient, filePath: string): Promise<string> {
+  // Validate file exists before uploading
+  try {
+    await access(filePath, constants.R_OK);
+  } catch {
+    throw new Error(`Image file not found or not readable: ${filePath}`);
+  }
+
   const fileBuffer = await readFile(filePath);
   const fileSize = fileBuffer.byteLength;
   const filename = filePath.split('/').pop() ?? 'image.jpg';

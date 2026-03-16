@@ -10,18 +10,18 @@ export function registerLoginCommand(program: Command): void {
     .description('Store your LinkedIn session cookies (li_at + JSESSIONID) for CLI use')
     .option('--li-at <cookie>', 'li_at cookie value (from browser DevTools)')
     .option('--jsessionid <cookie>', 'JSESSIONID cookie value (from browser DevTools)')
+    .option('--skip-validation', 'Save cookies without verifying them against LinkedIn')
     .action(async function (this: Command) {
-      // Commander puts --li-at on the subcommand opts (not global), read from both
-      const localOpts = this.opts() as Record<string, string | undefined>;
-      const globalOpts = this.optsWithGlobals() as GlobalOptions & Record<string, string | undefined>;
+      const localOpts = this.opts() as Record<string, string | boolean | undefined>;
+      const globalOpts = this.optsWithGlobals() as GlobalOptions & Record<string, string | boolean | undefined>;
 
       try {
-        let liAt = localOpts.liAt ?? globalOpts.liAt;
-        let jsessionid = localOpts.jsessionid ?? globalOpts.jsessionid;
+        let liAt = (localOpts.liAt ?? globalOpts.liAt) as string | undefined;
+        let jsessionid = (localOpts.jsessionid ?? globalOpts.jsessionid) as string | undefined;
+        const skipValidation = localOpts.skipValidation as boolean | undefined;
 
         // Interactive mode if cookies not provided as flags
         if (!liAt || !jsessionid) {
-          // Dynamic import for Node 18 compat
           const { input: promptInput } = await import('@inquirer/prompts');
 
           if (!liAt) {
@@ -43,29 +43,51 @@ export function registerLoginCommand(program: Command): void {
         // Clean up JSESSIONID (remove surrounding quotes if present)
         jsessionid = jsessionid.replace(/^"/, '').replace(/"$/, '');
 
-        // Validate by fetching /me
-        const client = createClient({ liAt, jsessionid });
-        const me = await client.get<any>('/me');
-
-        const profileName = [me?.firstName, me?.lastName].filter(Boolean).join(' ') || 'Unknown';
-        const profileUrn = me?.entityUrn ?? me?.publicIdentifier ?? '';
-
+        // Save cookies FIRST — before any validation
         await saveConfig({
           li_at: liAt,
           jsessionid,
-          profile_name: profileName,
-          profile_urn: profileUrn,
         });
 
-        output(
-          {
-            message: 'Login successful',
-            profile: profileName,
-            urn: profileUrn,
+        // Optionally validate by fetching /me
+        if (!skipValidation) {
+          try {
+            const client = createClient({ liAt, jsessionid });
+            const me = await client.get<any>('/me');
+            const profileName = [me?.firstName, me?.lastName].filter(Boolean).join(' ') || 'Unknown';
+            const profileUrn = me?.entityUrn ?? me?.publicIdentifier ?? '';
+
+            // Update config with profile info
+            await saveConfig({
+              li_at: liAt,
+              jsessionid,
+              profile_name: profileName,
+              profile_urn: profileUrn,
+            });
+
+            output({
+              message: 'Login successful',
+              profile: profileName,
+              urn: profileUrn,
+              config: '~/.linkedin-cli/config.json',
+              validated: true,
+            }, globalOpts);
+          } catch (validationErr: any) {
+            // Cookies saved but validation failed — warn, don't fail
+            output({
+              message: 'Cookies saved but validation failed — they may still work',
+              warning: validationErr?.message ?? String(validationErr),
+              config: '~/.linkedin-cli/config.json',
+              validated: false,
+            }, globalOpts);
+          }
+        } else {
+          output({
+            message: 'Cookies saved (validation skipped)',
             config: '~/.linkedin-cli/config.json',
-          },
-          globalOpts,
-        );
+            validated: false,
+          }, globalOpts);
+        }
       } catch (error) {
         outputError(error, globalOpts);
       }
@@ -91,9 +113,11 @@ export function registerLogoutCommand(program: Command): void {
 export function registerStatusCommand(program: Command): void {
   program
     .command('status')
-    .description('Check current login status and cookie validity')
-    .action(async () => {
-      const globalOpts = program.optsWithGlobals() as GlobalOptions;
+    .description('Check current login status (reads config only, use --verify to check session live)')
+    .option('--verify', 'Make an API call to verify the session is still valid')
+    .action(async function (this: Command) {
+      const localOpts = this.opts() as Record<string, boolean | undefined>;
+      const globalOpts = this.optsWithGlobals() as GlobalOptions;
       try {
         const { loadConfig } = await import('../../core/config.js');
         const config = await loadConfig();
@@ -103,7 +127,19 @@ export function registerStatusCommand(program: Command): void {
           return;
         }
 
-        // Validate session by calling /me
+        // Default: just show what's stored, no API call
+        if (!localOpts.verify) {
+          output({
+            logged_in: true,
+            profile: config.profile_name || 'Unknown',
+            urn: config.profile_urn || '',
+            config: '~/.linkedin-cli/config.json',
+            note: 'Use --verify to check if session is still valid',
+          }, globalOpts);
+          return;
+        }
+
+        // --verify: make a live API call
         const client = createClient({ liAt: config.li_at, jsessionid: config.jsessionid });
         try {
           const me = await client.get<any>('/me');
@@ -115,7 +151,6 @@ export function registerStatusCommand(program: Command): void {
             session_valid: true,
           }, globalOpts);
         } catch (err: any) {
-          // Only report session_valid: false for actual auth errors
           const isAuthError = err?.code === 'AUTH_ERROR' || err?.statusCode === 401;
           if (isAuthError) {
             output({
@@ -125,7 +160,6 @@ export function registerStatusCommand(program: Command): void {
               message: 'Session cookies expired. Run: linkedin login',
             }, globalOpts);
           } else {
-            // Transient error — session may still be valid
             output({
               logged_in: true,
               profile: config.profile_name || 'Unknown',

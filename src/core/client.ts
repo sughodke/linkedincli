@@ -12,9 +12,9 @@ import {
 
 const VOYAGER_BASE = 'https://www.linkedin.com/voyager/api';
 const LINKEDIN_BASE = 'https://www.linkedin.com';
-const VERSION = '0.1.0';
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 30_000;
+const MIN_REQUEST_GAP_MS = 2_000;
 
 /** Human-like delay to avoid rate limits (2-5s) */
 function randomDelay(): Promise<void> {
@@ -36,7 +36,7 @@ export function createClient(auth: LinkedInAuth): LinkedInClient {
     'csrf-token': csrfToken,
     cookie: `JSESSIONID="${csrfToken}"; li_at=${auth.liAt}`,
     'user-agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     accept: 'application/vnd.linkedin.normalized+json+2.1',
     'accept-language': 'en-US,en;q=0.9',
     'x-li-lang': 'en_US',
@@ -62,8 +62,8 @@ export function createClient(auth: LinkedInAuth): LinkedInClient {
     // Rate limit: ensure minimum gap between requests
     const now = Date.now();
     const elapsed = now - lastRequestTime;
-    if (elapsed < 1000) {
-      await new Promise((resolve) => setTimeout(resolve, 1000 - elapsed));
+    if (elapsed < MIN_REQUEST_GAP_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_REQUEST_GAP_MS - elapsed));
     }
 
     const base = options.baseRequest ? LINKEDIN_BASE : VOYAGER_BASE;
@@ -90,8 +90,8 @@ export function createClient(auth: LinkedInAuth): LinkedInClient {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       if (attempt > 0) {
-        const backoff = Math.min(1000 * Math.pow(2, attempt), 30_000);
-        await new Promise((resolve) => setTimeout(resolve, backoff));
+        // Use human-like random delay between retries instead of fixed backoff
+        await randomDelay();
       }
 
       try {
@@ -136,6 +136,7 @@ export function createClient(auth: LinkedInAuth): LinkedInClient {
 
         switch (response.status) {
           case 401:
+            // Never retry auth errors — bail immediately
             throw new AuthError('Session expired or invalid. Run: linkedin login');
           case 403:
             throw new ForbiddenError(errorMessage);
@@ -162,6 +163,7 @@ export function createClient(auth: LinkedInAuth): LinkedInClient {
             throw new LinkedInError(errorMessage, 'API_ERROR', response.status);
         }
       } catch (error) {
+        // Non-retryable errors: bail immediately
         if (
           error instanceof LinkedInError &&
           !(error instanceof RateLimitError) &&
