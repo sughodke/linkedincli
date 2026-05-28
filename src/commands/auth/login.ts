@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { saveConfig } from '../../core/config.js';
 import { createClient } from '../../core/client.js';
 import { output, outputError } from '../../core/output.js';
+import { resolveAuth } from '../../core/auth.js';
 import type { GlobalOptions } from '../../core/types.js';
 
 export function registerLoginCommand(program: Command): void {
@@ -139,8 +140,10 @@ export function registerStatusCommand(program: Command): void {
           return;
         }
 
-        // --verify: make a live API call
-        const client = createClient({ liAt: config.li_at, jsessionid: config.jsessionid });
+        // --verify: make a live API call. Use resolveAuth so --from-chrome /
+        // LINKEDIN_FROM_CHROME / env vars are honored, not just the config file.
+        const auth = await resolveAuth();
+        const client = createClient(auth);
         try {
           const me = await client.get<any>('/me');
           const name = [me?.firstName, me?.lastName].filter(Boolean).join(' ');

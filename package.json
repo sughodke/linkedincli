@@ -1,6 +1,6 @@
 {
-  "name": "@bcharleson/linkedincli",
-  "version": "0.1.5",
+  "name": "@sughodke/linkedincli",
+  "version": "0.2.0",
   "description": "CLI and MCP server for LinkedIn — 43 commands for profiles, posts, messaging, connections, search, feed, and more. Cookie session auth, AI agent native.",
   "type": "module",
   "bin": {
@@ -26,11 +26,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bcharleson/linkedincli.git"
+    "url": "git+https://github.com/sughodke/linkedincli.git"
   },
-  "homepage": "https://github.com/bcharleson/linkedincli#readme",
+  "homepage": "https://github.com/sughodke/linkedincli#readme",
   "bugs": {
-    "url": "https://github.com/bcharleson/linkedincli/issues"
+    "url": "https://github.com/sughodke/linkedincli/issues"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
@@ -63,6 +63,6 @@
     "posts",
     "feed"
   ],
-  "author": "Brandon Charleson",
+  "author": "Sid Ghodke (fork of bcharleson/linkedincli)",
   "license": "MIT"
 }

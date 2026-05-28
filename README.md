@@ -4,41 +4,54 @@ Full LinkedIn platform management from your terminal. 43 commands for profiles, 
 
 Works as a **CLI** and an **MCP server** (for Claude Code, Cursor, Windsurf, and other AI agents).
 
+**This fork adds:**
+- 🍪 Read cookies directly from Chrome — no manual copy/paste (`--from-chrome` / `LINKEDIN_FROM_CHROME=1`)
+- 🛡️ `curl-impersonate-chrome` HTTP transport so the TLS fingerprint (JA3) matches real Chrome and LinkedIn doesn't kill the session on the first call (`LINKEDIN_HTTP=curl-impersonate`)
+
 ## Install
 
 ```bash
-# Install globally
-npm install -g @bcharleson/linkedincli
+# Run without installing (recommended — pulls latest from npm)
+npx @sughodke/linkedincli --help
 
-# This installs the `linkedin` command:
+# Or with Bun
+bunx @sughodke/linkedincli --help
+
+# Or install globally
+npm install -g @sughodke/linkedincli
 linkedin --help
-
-# Or run without installing
-npx @bcharleson/linkedincli --help
 ```
 
-> **Note:** The npm package is `@bcharleson/linkedincli` but the CLI command is just **`linkedin`**.
+> **Note:** Once installed, the CLI command is just **`linkedin`**.
 
 ## Quick Start
 
-### 1. Get Your Cookies
+### Option A — Read cookies from Chrome (recommended)
 
-Open LinkedIn in your browser → DevTools (`F12`) → Application → Cookies → `linkedin.com`
+If you're already logged into LinkedIn in Chrome, this is the easiest path. No copy/paste, and the CLI gets all ~25 of LinkedIn's cookies (not just `li_at` + `JSESSIONID`) — which matters because LinkedIn flags sessions that send a suspiciously thin cookie jar.
 
-Copy these two values:
-- **`li_at`** — your session token (long string starting with `AQED...`)
-- **`JSESSIONID`** — your session ID (starts with `ajax:`)
+```bash
+# macOS will prompt to unlock the Keychain ("Chrome Safe Storage") the first time.
+LINKEDIN_FROM_CHROME=1 linkedin profile me --pretty
+```
 
-### 2. Login
+Optional env vars:
+- `LINKEDIN_CHROME_PROFILE=Profile 1` — pick a non-default Chrome profile
+- `LINKEDIN_HTTP=curl-impersonate` — use `curl_chrome123` for the HTTP transport so the TLS handshake matches real Chrome (requires `curl-impersonate-chrome` installed: `nix profile install nixpkgs#curl-impersonate-chrome` or `brew install curl-impersonate`). Highly recommended — without this, LinkedIn's anti-abuse can detect the Node fetch fingerprint and invalidate your `li_at`.
+
+### Option B — Paste cookies manually
+
+Open LinkedIn in your browser → DevTools (`F12`) → Application → Cookies → `linkedin.com`.
+
+Copy:
+- **`li_at`** — session token (long string starting with `AQED...`)
+- **`JSESSIONID`** — session ID (starts with `ajax:`)
 
 ```bash
 linkedin login
 # Paste your li_at and JSESSIONID when prompted
-```
 
-Or non-interactively:
-
-```bash
+# Or non-interactively:
 linkedin login --li-at "AQEDxxxxxxx" --jsessionid "ajax:1234567890"
 ```
 
@@ -220,7 +233,7 @@ Or if using `npx`:
   "mcpServers": {
     "linkedin": {
       "command": "npx",
-      "args": ["-y", "@bcharleson/linkedincli", "mcp"]
+      "args": ["-y", "@sughodke/linkedincli", "mcp"]
     }
   }
 }

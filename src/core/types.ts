@@ -51,6 +51,14 @@ export interface GlobalOptions {
 export interface LinkedInAuth {
   liAt: string;
   jsessionid: string;
+  /**
+   * Full cookie header string with ALL linkedin.com cookies. When present,
+   * the HTTP client uses this verbatim instead of synthesizing a minimal
+   * `li_at; JSESSIONID` cookie pair — important for matching a real browser's
+   * cookie jar shape (lidc, bcookie, bscookie, lang, etc.) so LinkedIn's
+   * anti-abuse doesn't immediately invalidate the session.
+   */
+  cookieHeader?: string;
 }
 
 export interface LinkedInClient {
